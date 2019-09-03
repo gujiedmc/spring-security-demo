@@ -30,4 +30,8 @@ public class SecurityConfigProperties {
      * 登录成功时，跳转方式
      */
     private LoginType loginType = LoginType.HTML;
+    /**
+     * 退出登录处理路径，需要和前端登录路径匹配
+     */
+    private String logoutUrl = "/auth/logout";
 }

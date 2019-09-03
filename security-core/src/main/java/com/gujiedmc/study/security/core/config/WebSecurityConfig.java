@@ -1,6 +1,7 @@
 package com.gujiedmc.study.security.core.config;
 
 import com.gujiedmc.study.security.core.config.properties.SecurityConfigProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
  * @author duyinchuan
  * @date 2019-09-02
  */
+@Slf4j
 @EnableConfigurationProperties(SecurityConfigProperties.class)
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -27,12 +29,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     @Override
-    public UserDetailsService userDetailsService(){
+    public UserDetailsService userDetailsService() {
         InMemoryUserDetailsManager userDetailsManager = new InMemoryUserDetailsManager();
         userDetailsManager.createUser(User.withDefaultPasswordEncoder()
                 .username("user")
                 .password("123456")
-                .roles("all","admin")
+                .roles("all", "admin")
                 .build());
         return userDetailsManager;
     }
@@ -53,17 +55,28 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     // 自定义账号密码参数名称
                     .usernameParameter("username")
                     .passwordParameter("password")
-                .and()
-                    .authorizeRequests()
+                .and().logout()
+                    // 退出登录执行路径，和前端一致即可
+                    .logoutUrl(securityConfigProperties.getLogoutUrl())
+                    // 退出登录时进行业务处理，这里只做了打印日志
+                    .addLogoutHandler((request, response, authentication) ->
+                            log.info("准备退出登录:{}", authentication))
+                    // 退出成功后处理方式，也可以使用logoutSuccessHandler，这里直接跳转未登录处理接口
+                    .logoutSuccessUrl(securityConfigProperties.getLoginRequire())
+                    // 使session无效
+                    .invalidateHttpSession(true)
+                    // 清除用户信息
+                    .clearAuthentication(true)
+                .and().authorizeRequests()
                     .antMatchers(securityConfigProperties.getLoginPage(),
                             securityConfigProperties.getLoginRequire(),
                             securityConfigProperties.getFormLoginProcessUrl(),
+                            securityConfigProperties.getLogoutUrl(),
                             "/favicon.ico")
                     .permitAll()
                     .anyRequest()
                     .authenticated()
-                .and()
-                .csrf().disable();
+                .and().csrf().disable();
     }
 }
 // 1. loginPage  loginProcessingUrl必须permitAll不然会一直跳转登录页面 无限302
