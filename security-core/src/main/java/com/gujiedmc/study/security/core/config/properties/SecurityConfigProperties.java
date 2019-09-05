@@ -23,6 +23,10 @@ public class SecurityConfigProperties {
      */
     private String formLoginProcessUrl = "/auth/form";
     /**
+     * 自定义复合登录处理路径，需要和前端登录路径匹配
+     */
+    private String loginProcessUrl = "/auth/login";
+    /**
      * 默认成功路径，登录成功时跳转路径
      */
     private String defaultSuccessUrl = "/index.html";

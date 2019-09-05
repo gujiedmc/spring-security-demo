@@ -1,11 +1,13 @@
 package com.gujiedmc.study.security.core.config;
 
+import com.gujiedmc.study.security.core.config.auth.MultiAuthenticationConfig;
 import com.gujiedmc.study.security.core.config.properties.SecurityConfigProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
@@ -27,8 +29,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private LoginSuccessHandler loginSuccessHandler;
 
+    @Autowired
+    private MultiAuthenticationConfig multiAuthenticationConfig;
+
     @Bean
     @Override
+    @Primary
     public UserDetailsService userDetailsService() {
         InMemoryUserDetailsManager userDetailsManager = new InMemoryUserDetailsManager();
         userDetailsManager.createUser(User.withDefaultPasswordEncoder()
@@ -67,6 +73,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .invalidateHttpSession(true)
                     // 清除用户信息
                     .clearAuthentication(true)
+                .and()
+                    .rememberMe()
+                    .tokenValiditySeconds(20)
+                    .rememberMeParameter("remember")
                 .and().authorizeRequests()
                     .antMatchers(securityConfigProperties.getLoginPage(),
                             securityConfigProperties.getLoginRequire(),
@@ -77,6 +87,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .anyRequest()
                     .authenticated()
                 .and().csrf().disable();
+
+        http.apply(multiAuthenticationConfig);
     }
 }
 // 1. loginPage  loginProcessingUrl必须permitAll不然会一直跳转登录页面 无限302
