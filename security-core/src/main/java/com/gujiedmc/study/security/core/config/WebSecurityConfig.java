@@ -2,6 +2,7 @@ package com.gujiedmc.study.security.core.config;
 
 import com.gujiedmc.study.security.core.config.auth.MultiAuthenticationConfig;
 import com.gujiedmc.study.security.core.config.properties.SecurityConfigProperties;
+import com.gujiedmc.study.security.core.config.properties.SocialConfigProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,13 +14,14 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.social.security.SpringSocialConfigurer;
 
 /**
  * @author duyinchuan
  * @date 2019-09-02
  */
 @Slf4j
-@EnableConfigurationProperties(SecurityConfigProperties.class)
+@EnableConfigurationProperties({SecurityConfigProperties.class, SocialConfigProperties.class})
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -31,6 +33,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private MultiAuthenticationConfig multiAuthenticationConfig;
+
+    @Autowired
+    private SpringSocialConfigurer springSocialConfigurer;
 
     @Bean
     @Override
@@ -82,15 +87,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                             securityConfigProperties.getLoginRequire(),
                             securityConfigProperties.getFormLoginProcessUrl(),
                             securityConfigProperties.getLogoutUrl(),
+                            "/user/regist",
+                            "/signUp.html",
                             "/favicon.ico")
                     .permitAll()
                     .anyRequest()
                     .authenticated()
                 .and().csrf().disable();
-
+        // 自定义登录
         http.apply(multiAuthenticationConfig);
+        // 社交登录
+        http.apply(springSocialConfigurer);
     }
 }
-// 1. loginPage  loginProcessingUrl必须permitAll不然会一直跳转登录页面 无限302
-// 2. csrf.disable()需要，否则 302
-// 3. successForwardUrl failureForwardUrl 在登录后转发变成了post请求 导致405 POST not supported
