@@ -38,4 +38,12 @@ public class SecurityConfigProperties {
      * 退出登录处理路径，需要和前端登录路径匹配
      */
     private String logoutUrl = "/auth/logout";
+    /**
+     * 同一个用户在系统中的最大session数，默认不限制
+     */
+    private int maximumSessions = Integer.MAX_VALUE;
+    /**
+     * 达到最大session时是否阻止新的登录请求，默认为false，不阻止，新的登录会将老的登录失效掉
+     */
+    private boolean maxSessionsPreventsLogin;
 }

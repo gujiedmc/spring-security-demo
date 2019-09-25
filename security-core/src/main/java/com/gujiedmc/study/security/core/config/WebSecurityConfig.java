@@ -3,6 +3,7 @@ package com.gujiedmc.study.security.core.config;
 import com.gujiedmc.study.security.core.config.auth.MultiAuthenticationConfig;
 import com.gujiedmc.study.security.core.config.properties.SecurityConfigProperties;
 import com.gujiedmc.study.security.core.config.properties.SocialConfigProperties;
+import com.gujiedmc.study.security.core.config.session.CustomSessionExpiredStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -34,8 +36,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private MultiAuthenticationConfig multiAuthenticationConfig;
 
-    @Autowired
+    @Autowired(required = false)
     private SpringSocialConfigurer springSocialConfigurer;
+
+    @Autowired(required = false)
+    private SessionManagementConfigurer sessionManagementConfigurer;
 
     @Bean
     @Override
@@ -87,9 +92,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                             securityConfigProperties.getLoginRequire(),
                             securityConfigProperties.getFormLoginProcessUrl(),
                             securityConfigProperties.getLogoutUrl(),
-                            "/user/regist",
-                            "/signUp.html",
-                            "/favicon.ico")
+                            "/user/regist","/signUp.html","/favicon.ico")
                     .permitAll()
                     .anyRequest()
                     .authenticated()
@@ -97,6 +100,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         // 自定义登录
         http.apply(multiAuthenticationConfig);
         // 社交登录
-        http.apply(springSocialConfigurer);
+        if (springSocialConfigurer != null) {
+            http.apply(springSocialConfigurer);
+        }
+        // session配置
+        if (sessionManagementConfigurer != null){
+            http.apply(sessionManagementConfigurer);
+        }
     }
 }
